@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="年商を入れると、AI導入補助金の申請可能額と補助額が出る社内ツール。">
+<meta name="theme-color" content="#EDF0F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0B1117" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%A7%AE%3C/text%3E%3C/svg%3E">
+<title>AI導入補助金 試算</title>
+<style>
+  :root {
+    color-scheme: light;
+    --paper:#EDF0F3; --surface:#FFFFFF; --surface-2:#F5F7F9;
+    --ink:#101820; --ink-2:#3B4956; --muted:#6B7A88;
+    --line:#D6DDE4; --line-soft:#E6EBF0;
+    --accent:#1E3A55; --accent-2:#37648F; --accent-ink:#FFFFFF;
+    --ok:#12704B; --ok-bg:#E3F1EA; --warn:#8A5A05; --warn-bg:#FBF0DC;
+    --shadow: 0 1px 2px rgba(16,24,32,.05), 0 8px 24px -14px rgba(16,24,32,.28);
+    --mincho: "Hiragino Mincho ProN", "Yu Mincho", YuMincho, "Noto Serif JP", serif;
+    --gothic: "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", YuGothic, "Noto Sans JP", Meiryo, system-ui, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --paper:#0B1117; --surface:#121A22; --surface-2:#18222C;
+      --ink:#E7EDF3; --ink-2:#B7C4D0; --muted:#8496A6;
+      --line:#26333F; --line-soft:#1D2833;
+      --accent:#A9C9E8; --accent-2:#7BA6CE; --accent-ink:#0B1117;
+      --ok:#4FC08D; --ok-bg:#10362A; --warn:#E0A94A; --warn-bg:#3A2C10;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --paper:#0B1117; --surface:#121A22; --surface-2:#18222C;
+    --ink:#E7EDF3; --ink-2:#B7C4D0; --muted:#8496A6;
+    --line:#26333F; --line-soft:#1D2833;
+    --accent:#A9C9E8; --accent-2:#7BA6CE; --accent-ink:#0B1117;
+    --ok:#4FC08D; --ok-bg:#10362A; --warn:#E0A94A; --warn-bg:#3A2C10;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px -18px rgba(0,0,0,.9);
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--paper); color:var(--ink); font-family:var(--gothic); font-size:15px; line-height:1.7; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 36px 16px 72px; display:flex; flex-direction:column; gap:24px; }
+  .masthead { border-bottom: 2px solid var(--ink); padding-bottom: 18px; display:flex; flex-direction:column; gap:6px; }
+  .eyebrow { font-size:11px; letter-spacing:.22em; color:var(--muted); font-weight:700; }
+  h1 { font-family:var(--mincho); font-size:clamp(26px,4.4vw,36px); line-height:1.25; font-weight:600; margin:0; }
+  .lede { margin:0; color:var(--ink-2); font-size:14px; max-width:62ch; }
+  .cols { display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:24px; align-items:start; }
+  @media (max-width: 820px) { .cols { grid-template-columns:minmax(0,1fr); } }
+  .panel { background:var(--surface); border:1px solid var(--line); border-radius:4px; box-shadow:var(--shadow); }
+  .panel-head { padding:13px 20px; border-bottom:1px solid var(--line-soft); font-family:var(--mincho); font-weight:600; letter-spacing:.06em; }
+  .panel-body { padding:20px; display:flex; flex-direction:column; gap:20px; }
+  .field-label { font-size:11.5px; letter-spacing:.14em; color:var(--muted); font-weight:700; display:block; margin-bottom:6px; }
+  .money { display:flex; align-items:stretch; border:1px solid var(--line); border-radius:4px; background:var(--surface-2); overflow:hidden; }
+  .money:focus-within { border-color:var(--accent-2); box-shadow:0 0 0 3px color-mix(in srgb, var(--accent-2) 25%, transparent); }
+  .money input { flex:1; min-width:0; border:0; background:transparent; color:var(--ink); font:600 22px/1.2 var(--mono); padding:12px 14px; text-align:right; font-variant-numeric:tabular-nums; outline:none; }
+  .money select { border:0; border-left:1px solid var(--line); background:var(--surface); color:var(--ink-2); font:13px var(--gothic); padding:0 10px; }
+  .hint { font-size:12px; color:var(--muted); margin-top:6px; }
+  .seg { display:grid; grid-template-columns:1fr 1fr; border:1px solid var(--line); border-radius:4px; overflow:hidden; }
+  .seg label { text-align:center; padding:10px 8px; cursor:pointer; font-size:14px; background:var(--surface-2); color:var(--ink-2); }
+  .seg label + label { border-left:1px solid var(--line); }
+  .seg input { position:absolute; opacity:0; pointer-events:none; }
+  .seg input:checked + span { font-weight:700; }
+  .seg label:has(input:checked) { background:var(--accent); color:var(--accent-ink); }
+  .seg label:has(input:focus-visible) { outline:2px solid var(--accent-2); outline-offset:-3px; }
+  .check { display:flex; gap:8px; align-items:center; font-size:13.5px; color:var(--ink-2); cursor:pointer; }
+
+  .hero { display:grid; grid-template-columns:1fr 1fr; border-bottom:1px solid var(--line-soft); }
+  .hero > div { padding:20px; }
+  .hero > div + div { border-left:1px solid var(--line-soft); }
+  @media (max-width: 420px) { .hero { grid-template-columns:1fr; } .hero > div + div { border-left:0; border-top:1px solid var(--line-soft); } }
+  .hero .k { font-size:12px; letter-spacing:.12em; color:var(--muted); font-weight:700; }
+  .hero .v { font:700 clamp(28px,5vw,36px)/1.15 var(--mono); font-variant-numeric:tabular-nums; margin-top:4px; }
+  .hero .v small { font:600 14px var(--gothic); margin-left:2px; color:var(--ink-2); }
+  .hero .s { font-size:12px; color:var(--muted); margin-top:2px; font-family:var(--mono); }
+  .grant .v { color:var(--ok); }
+  dl.rows { margin:0; display:grid; grid-template-columns:1fr auto; }
+  dl.rows dt, dl.rows dd { padding:9px 20px; border-bottom:1px solid var(--line-soft); margin:0; }
+  dl.rows dt { color:var(--ink-2); font-size:13.5px; }
+  dl.rows dt small { display:block; color:var(--muted); font-size:11.5px; }
+  dl.rows dd { text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; font-size:15px; }
+  .note { margin:16px 20px 20px; padding:10px 12px; border-radius:4px; font-size:13px; }
+  .note.ok { background:var(--ok-bg); color:var(--ok); }
+  .note.warn { background:var(--warn-bg); color:var(--warn); }
+
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  th, td { padding:7px 14px; border-bottom:1px solid var(--line-soft); text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums; white-space:nowrap; }
+  th { font-family:var(--gothic); font-size:11.5px; letter-spacing:.1em; color:var(--muted); font-weight:700; background:var(--surface-2); position:sticky; top:0; }
+  tr.on td { background:color-mix(in srgb, var(--ok) 12%, transparent); font-weight:700; }
+  tr.out td { color:var(--muted); }
+  .table-wrap { max-height:420px; overflow:auto; }
+  .formula { padding:16px 20px 20px; font-size:13px; color:var(--ink-2); }
+  .formula code { font-family:var(--mono); font-size:12.5px; background:var(--surface-2); padding:1px 5px; border-radius:3px; }
+  .formula ol { margin:6px 0 0; padding-left:1.3em; }
+  .formula li { margin:4px 0; }
+  .plans { display:flex; flex-direction:column; gap:6px; }
+  .plans label { display:grid; grid-template-columns:auto 1fr auto; gap:10px; align-items:center; padding:9px 12px; border:1px solid var(--line); border-radius:4px; background:var(--surface-2); cursor:pointer; font-size:14px; }
+  .plans label:has(input:checked) { border-color:var(--accent); background:var(--surface); box-shadow:inset 3px 0 0 var(--accent); }
+  .plans .pr { font-family:var(--mono); font-variant-numeric:tabular-nums; color:var(--ink-2); font-size:13px; }
+  .plans .ng .pr::after { content:'  年商不足'; font-family:var(--gothic); font-size:11px; color:var(--warn); }
+  .count { display:flex; align-items:center; gap:8px; }
+  .count input { width:90px; border:1px solid var(--line); border-radius:4px; background:var(--surface-2); color:var(--ink); font:600 18px var(--mono); padding:8px 10px; text-align:right; }
+  td.l, th.l { text-align:left; font-family:var(--gothic); }
+  .sep { border-left:1px solid var(--line); }
+  #cName { font-family:var(--gothic); letter-spacing:.04em; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">CAMOMILE · 社内ツール</div>
+    <h1>AI導入補助金 試算</h1>
+    <p class="lede">年商を入れると、申請できる金額（税込）と補助額が出ます。計算式は共有スプレッドシートと同じです（補助額は税別の申請額から計算）。下の欄で、プランごとの代理店報酬も出せます。</p>
+  </header>
+
+  <div class="cols">
+    <section class="panel" aria-labelledby="in-h">
+      <div class="panel-head" id="in-h">入力</div>
+      <div class="panel-body">
+        <div>
+          <label class="field-label" for="rev">年商</label>
+          <div class="money">
+            <input id="rev" inputmode="numeric" autocomplete="off" placeholder="3600" value="">
+            <select id="revUnit" aria-label="年商の単位"><option value="10000" selected>万円</option><option value="1">円</option></select>
+          </div>
+          <div class="hint" id="revEcho">例：3600 万円</div>
+        </div>
+        <div>
+          <span class="field-label">事業者の区分</span>
+          <div class="seg" role="radiogroup" aria-label="事業者の区分">
+            <label><input type="radio" name="kind" value="chusho" checked><span>中小企業</span></label>
+            <label><input type="radio" name="kind" value="shokibo"><span>小規模事業者</span></label>
+          </div>
+          <div class="hint">小規模事業者：商業・サービス業は従業員5人以下、製造業その他は20人以下（宿泊・娯楽は20人以下）。50万円までの補助率が 4/5 になる。</div>
+        </div>
+        <div>
+          <label class="field-label" for="amt">申請額（税込）</label>
+          <div class="money">
+            <input id="amt" inputmode="numeric" autocomplete="off" placeholder="自動">
+            <select id="amtUnit" aria-label="申請額の単位"><option value="10000" selected>万円</option><option value="1">円</option></select>
+          </div>
+          <div class="hint">空欄なら申請可能額（上限）で計算。下げて申請するときだけ税込で入れる。</div>
+        </div>
+        <label class="check"><input type="checkbox" id="fine"> 1万円刻みで申請可能額を出す（既定は税込10万円刻み）</label>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="out-h" aria-live="polite">
+      <div class="panel-head" id="out-h">結果</div>
+      <div class="hero">
+        <div><div class="k" id="amtLabel">申請可能額（税込）</div><div class="v" id="oAmt">—</div><div class="s" id="oAmtYen"></div></div>
+        <div class="grant"><div class="k">補助額</div><div class="v" id="oGrant">—</div><div class="s" id="oGrantYen"></div></div>
+      </div>
+      <dl class="rows">
+        <dt>申請額（税別）<small>税込 ÷ 1.1（補助額はこの額から計算）</small></dt><dd id="oTax">—</dd>
+        <dt>自己負担<small>税込 − 補助額</small></dt><dd id="oBurden">—</dd>
+        <dt>自己負担の年商に対する割合<small>9% 以下が条件</small></dt><dd id="oPct">—</dd>
+        <dt>この申請額に必要な年商<small>売上基準（自己負担 ÷ 9%、10万円単位で切り上げ）</small></dt><dd id="oNeed">—</dd>
+        <dt>申請可能額（税込・上限 570万円）</dt><dd id="oMax">—</dd>
+      </dl>
+      <div class="note" id="oNote" hidden></div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="tbl-h">
+    <div class="panel-head" id="tbl-h">申請額ごとの補助額と必要な年商</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>申請額（税込）</th><th>税別</th><th>補助額</th><th>自己負担</th><th>必要な年商</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="cols">
+    <section class="panel" aria-labelledby="c-in-h">
+      <div class="panel-head" id="c-in-h">代理店報酬（4プラン）</div>
+      <div class="panel-body">
+        <div>
+          <span class="field-label">法人／個人事業主</span>
+          <div class="seg" role="radiogroup" aria-label="法人か個人事業主か">
+            <label><input type="radio" name="entity" value="corp" checked><span>法人</span></label>
+            <label><input type="radio" name="entity" value="indiv"><span>個人事業主</span></label>
+          </div>
+        </div>
+        <div>
+          <span class="field-label">プラン（税込）</span>
+          <div class="plans" id="plans" role="radiogroup" aria-label="プラン"></div>
+          <div class="hint">上の年商（前期）が、プランの「対象となる年商」に届かないと「年商不足」と出る。</div>
+        </div>
+        <div>
+          <label class="field-label" for="cnt">このプランのその月の件数（代理店ごと）</label>
+          <div class="count"><input id="cnt" inputmode="numeric" value="1" autocomplete="off"><span>件</span></div>
+          <div class="hint">② 追加紹介報酬の段はプランごとに数える（ロイヤルはロイヤルの件数だけで5件・10件）。届くと、その月のそのプランの全件がその段の額になる。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" aria-labelledby="c-out-h" aria-live="polite">
+      <div class="panel-head" id="c-out-h">代理店への報酬</div>
+      <div class="hero">
+        <div><div class="k">プラン</div><div class="v" id="cName">—</div><div class="s" id="cPrice"></div></div>
+        <div class="grant"><div class="k">報酬 計（1件あたり）</div><div class="v" id="cTotal">—</div><div class="s">① ＋ ②・税込</div></div>
+      </div>
+      <dl class="rows">
+        <dt>補助額<small id="cKind">このプランの税込から計算</small></dt><dd id="cGrant">—</dd>
+        <dt>対象となる年商<small id="cNeedNote">前期の年商・案内資料の表</small></dt><dd id="cNeed">—</dd>
+        <dt>① 紹介報酬<small>1件あたり・税込・補助金が交付申請した額の満額で交付されたとき</small></dt><dd id="cRef">—</dd>
+        <dt>② 追加紹介報酬<small id="cTier">1件あたり・税込</small></dt><dd id="cExtra">—</dd>
+        <dt>その月の報酬の合計<small id="cMonthNote">件数 × （① ＋ ②）</small></dt><dd id="cMonth">—</dd>
+      </dl>
+      <div class="note" id="cNote" hidden></div>
+    </section>
+  </div>
+
+  <section class="panel" aria-labelledby="ptbl-h">
+    <div class="panel-head" id="ptbl-h">プランごとの補助額・必要な年商・代理店報酬</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th class="l">プラン</th><th>税込</th><th>税別</th><th>補助額</th><th>自己負担</th><th>年商 法人</th><th>年商 個人</th>
+              <th class="sep">① 紹介報酬</th><th>② 1〜4件</th><th>② 5〜9件</th><th>② 10件〜</th></tr>
+        </thead>
+        <tbody id="ptbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="f-h">
+    <div class="panel-head" id="f-h">計算のしかた</div>
+    <div class="formula">
+      <ol>
+        <li><b>補助額</b> ＝ <code>MIN(350万円, 切り捨て((税別の申請額 − 基準) × 2/3) + 50万円)</code><br>
+          基準は 中小企業 <code>666,667円</code>（50万円 ÷ 3/4）、小規模事業者 <code>625,000円</code>（50万円 ÷ 4/5）。
+          50万円までは補助率 3/4（4/5）、それを超える部分は 2/3。</li>
+        <li><b>自己負担</b> ＝ <code>税込 − 補助額</code>（消費税は補助されない）。税別 ＝ 税込 ÷ 1.1（税込を超えない最大の円）</li>
+        <li><b>必要な年商</b> ＝ <code>自己負担 ÷ 9%</code> を10万円単位で切り上げ</li>
+        <li><b>申請可能額</b> ＝ 必要な年商 ≤ 年商 になる最大の申請額（税込10万円刻み・上限 税込570万円）。
+          税込570万円は税別 5,181,819円で、中小企業・小規模事業者どちらも補助額が上限 350万円に届く。</li>
+        <li><b>代理店への報酬</b>（1件あたり・税込）＝ ① 紹介報酬 ＋ ② 追加紹介報酬。② は代理店ごと・プランごとのその月の件数が 1件・5件・10件 のどの段に届いたかで、その月のそのプランの全件の額が決まる。
+          ① は補助金が交付申請した額の満額で交付されたときの額（満額でないときは話し合い）。</li>
+        <li><b>プランの対象となる年商</b>（前期）は案内資料の表：ミニマム 法人850万／個人900万、ライト 1,750万／2,100万、ベーシック 2,200万／2,650万、ロイヤル 2,650万／3,150万円 以上。
+          上の申請可能額（9% の売上基準）とは別の基準。</li>
+      </ol>
+    </div>
+  </section>
+</div>
+
+<script src="calc.js"></script>
+<script>
+(function () {
+  'use strict';
+  var C = window.AGCalc;
+  var $ = function (id) { return document.getElementById(id); };
+  var yen = function (n) { return n.toLocaleString('ja-JP') + '円'; };
+  var man = function (n) {
+    var v = n / 10000;
+    return (Number.isInteger(v) ? v.toLocaleString('ja-JP') : v.toLocaleString('ja-JP', { maximumFractionDigits: 4 }));
+  };
+  // 万円で割り切れるときは「520万円」、端数があるときは円で全桁（丸めた数を見せない）
+  function big(n) { return n % 10000 === 0 ? man(n) + '<small>万円</small>' : n.toLocaleString('ja-JP') + '<small>円</small>'; }
+  function sub(n) { return n % 10000 === 0 ? yen(n) : '約' + Math.floor(n / 10000).toLocaleString('ja-JP') + '万円'; }
+  function readMoney(inputId, unitId) {
+    var raw = $(inputId).value.replace(/[,，\s円]/g, '').replace(/[０-９．]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); });
+    if (raw === '') return null;
+    var n = Number(raw);
+    if (!isFinite(n) || n < 0) return NaN;
+    return Math.round(n * Number($(unitId).value));
+  }
+  function kind() { return document.querySelector('input[name="kind"]:checked').value; }
+
+  function render() {
+    var k = kind();
+    var step = $('fine').checked ? 10000 : 100000;
+    var rev = readMoney('rev', 'revUnit');
+    var manual = readMoney('amt', 'amtUnit');
+    var note = $('oNote');
+    note.hidden = true;
+
+    $('revEcho').textContent = (rev === null || isNaN(rev)) ? '例：3600 万円' : '＝ ' + yen(rev);
+
+    var max = (rev === null || isNaN(rev)) ? null : C.maxTaxIncluded(rev, k, step);
+    var amount = (manual !== null && !isNaN(manual)) ? manual : max;
+    $('amtLabel').textContent = (manual !== null && !isNaN(manual)) ? '申請額（税込・手入力）' : '申請可能額（税込）';
+
+    renderTable(k, rev, amount);
+
+    if (amount === null || isNaN(amount)) {
+      ['oAmt', 'oGrant'].forEach(function (id) { $(id).textContent = '—'; });
+      ['oAmtYen', 'oGrantYen'].forEach(function (id) { $(id).textContent = ''; });
+      ['oTax', 'oBurden', 'oPct', 'oNeed', 'oMax'].forEach(function (id) { $(id).textContent = '—'; });
+      return;
+    }
+    var e = C.evaluateTaxIncluded(amount, k);
+    $('oAmt').innerHTML = big(e.taxIncluded);
+    $('oAmtYen').textContent = sub(e.taxIncluded);
+    $('oGrant').innerHTML = big(e.grant);
+    $('oGrantYen').textContent = sub(e.grant);
+    $('oTax').textContent = yen(e.amount);
+    $('oBurden').textContent = yen(e.burden);
+    $('oPct').textContent = rev ? (e.burden / rev * 100).toFixed(2) + '%' : '—';
+    $('oNeed').textContent = yen(e.revenueNeeded);
+    $('oMax').textContent = max === null ? '—' : yen(max);
+
+    if (rev !== null && !isNaN(rev)) {
+      if (max === 0) {
+        note.className = 'note warn'; note.hidden = false;
+        note.textContent = '年商が少なく、' + (step / 10000) + '万円でも売上基準を満たしません。';
+      } else if (e.revenueNeeded > rev) {
+        note.className = 'note warn'; note.hidden = false;
+        note.textContent = 'この申請額は売上基準を満たしません（年商があと ' + yen(e.revenueNeeded - rev) + ' 必要）。申請可能額は ' + yen(max) + '。';
+      } else if (e.taxIncluded > C.MAX_TAX_INCLUDED) {
+        note.className = 'note warn'; note.hidden = false;
+        note.textContent = '申請額の上限（税込 ' + yen(C.MAX_TAX_INCLUDED) + '）を超えています。超えた分は補助されず、全額が自己負担に乗ります。';
+      } else if (manual === null && e.grant >= C.GRANT_CAP) {
+        note.className = 'note ok'; note.hidden = false;
+        note.textContent = '上限（税込570万円）で申請でき、補助額も上限の350万円です。';
+      }
+    }
+  }
+
+  function renderTable(k, rev, chosen) {
+    var rows = [];
+    for (var x = 1000000; x <= C.MAX_TAX_INCLUDED; x += 100000) {
+      var e = C.evaluateTaxIncluded(x, k);
+      var cls = (chosen === x) ? 'on' : (rev !== null && !isNaN(rev) && e.revenueNeeded > rev ? 'out' : '');
+      rows.push('<tr class="' + cls + '"><td>' + yen(x) + '</td><td>' + yen(e.amount) + '</td><td>' + yen(e.grant) +
+        '</td><td>' + yen(e.burden) + '</td><td>' + yen(e.revenueNeeded) + '</td></tr>');
+    }
+    $('tbody').innerHTML = rows.join('');
+  }
+
+  ['rev', 'amt'].forEach(function (id) { $(id).addEventListener('input', render); });
+  ['revUnit', 'amtUnit', 'fine'].forEach(function (id) { $(id).addEventListener('change', render); });
+  document.querySelectorAll('input[name="kind"]').forEach(function (r) { r.addEventListener('change', render); });
+  // ---- 代理店報酬（4プラン） ----
+  var plansHost = $('plans');
+  C.PLANS.forEach(function (p, i) {
+    var l = document.createElement('label');
+    l.dataset.plan = p.id;
+    l.innerHTML = '<input type="radio" name="plan" value="' + p.id + '"' + (i === C.PLANS.length - 1 ? ' checked' : '') + '><span>' + p.name +
+      '</span><span class="pr">' + yen(p.price) + '</span>';
+    plansHost.appendChild(l);
+  });
+  function count() { var n = parseInt(String($('cnt').value).replace(/[０-９]/g, function (c) { return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }), 10); return isFinite(n) && n > 0 ? n : 1; }
+
+  function entity() { return document.querySelector('input[name="entity"]:checked').value; }
+  function renderCommission() {
+    var k = kind();
+    var en = entity();
+    var rev = readMoney('rev', 'revUnit');
+    var hasRev = rev !== null && !isNaN(rev);
+    var n = count();
+    var plan = C.planById(document.querySelector('input[name="plan"]:checked').value);
+    Array.prototype.forEach.call(plansHost.children, function (l) {
+      var ng = hasRev && C.planById(l.dataset.plan).minRevenue[en] > rev;
+      l.classList.toggle('ng', ng);
+    });
+    var e = C.evaluateTaxIncluded(plan.price, k);
+    var cm = C.commission(plan, n);
+    $('cName').textContent = plan.name;
+    $('cPrice').textContent = '税込 ' + yen(plan.price);
+    $('cTotal').innerHTML = big(cm.total);
+    $('cKind').textContent = 'このプランの税込から計算（' + C.KINDS[k].label + '）';
+    $('cGrant').textContent = yen(e.grant);
+    $('cNeed').textContent = yen(plan.minRevenue[en]) + ' 以上';
+    $('cNeedNote').textContent = '前期の年商・' + C.ENTITIES[en] + '・案内資料の表';
+    $('cRef').textContent = yen(cm.referral);
+    $('cTier').textContent = '1件あたり・税込・' + (cm.tierMin === 1 ? '1〜4件' : cm.tierMin === 5 ? '5〜9件' : '10件以上') + 'の段';
+    $('cExtra').textContent = yen(cm.extra);
+    $('cMonthNote').textContent = plan.name + ' ' + n + '件 × ' + yen(cm.total);
+    $('cMonth').textContent = yen(n * cm.total);
+
+    var note = $('cNote');
+    note.hidden = true;
+    if (hasRev && plan.minRevenue[en] > rev) {
+      var best = C.bestPlan(rev, en);
+      note.className = 'note warn'; note.hidden = false;
+      note.textContent = 'このプランは上の年商では対象外です（' + C.ENTITIES[en] + 'は年商 ' + yen(plan.minRevenue[en]) + ' 以上。あと ' +
+        yen(plan.minRevenue[en] - rev) + '）。' + (best ? '対象になる一番上のプランは ' + best.name + '。' : 'どのプランも対象外。');
+    } else {
+      var ups = plan.extra.filter(function (t) { return t[0] > n; });
+      if (ups.length) {
+        note.className = 'note ok'; note.hidden = false;
+        note.textContent = '今 ' + n + '件：1件 ' + yen(cm.total) + '、その月の合計 ' + yen(n * cm.total) + '。' + ups.map(function (t) {
+          var per = plan.referral + t[1];
+          return t[0] + '件から：1件 ' + yen(per) + '（② ' + yen(t[1]) + '）、' + t[0] + '件で合計 ' + yen(t[0] * per);
+        }).join('。') + '（' + plan.name + 'の件数で数える）。';
+      }
+    }
+
+    $('ptbody').innerHTML = C.PLANS.map(function (p) {
+      var x = C.evaluateTaxIncluded(p.price, k);
+      var t = C.extraTier(p, n);
+      var cls = p.id === plan.id ? 'on' : (hasRev && p.minRevenue[en] > rev ? 'out' : '');
+      return '<tr class="' + cls + '"><td class="l">' + p.name + '</td><td>' + yen(p.price) + '</td><td>' + yen(x.amount) + '</td><td>' + yen(x.grant) +
+        '</td><td>' + yen(x.burden) + '</td><td>' + yen(p.minRevenue.corp) + '</td><td>' + yen(p.minRevenue.indiv) + '</td><td class="sep">' + yen(p.referral) + '</td>' +
+        p.extra.map(function (q) { return '<td' + (q[0] === t.min ? ' style="font-weight:700"' : '') + '>' + yen(q[1]) + '</td>'; }).join('') + '</tr>';
+    }).join('');
+  }
+  $('cnt').addEventListener('input', renderCommission);
+  plansHost.addEventListener('change', renderCommission);
+  ['rev'].forEach(function (id) { $(id).addEventListener('input', renderCommission); });
+  $('revUnit').addEventListener('change', renderCommission);
+  document.querySelectorAll('input[name="kind"], input[name="entity"]').forEach(function (r) { r.addEventListener('change', renderCommission); });
+
+  render();
+  renderCommission();
+})();
+</script>
+</body>
+</html>
